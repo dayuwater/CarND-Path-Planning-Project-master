@@ -1,5 +1,35 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+
+## Reflection
+
+### Speed Control
+In order to maintain the speed of the car near the speed limit and decelerate the car when slow traffic is detected, a reference speed variable is introduced throughout the program execution. The 
+
+### Trajectory Generation
+
+I used the trajectory generation algorithm described in the walkthrough video using the `spline.h` file by Tino Kluge, which is also used in the video.
+
+
+### Lane Decision and Changing Algorithm
+
+In order to maintain the consistency of lane coordinates, Frenet coordinate is used to represent the positions of our car and other cars. Because each lane is 4m wide, and our car should stay at the center of lane for most of the times, there is a one-to-one relation between the d value of car's location in Frenet coordinate and the lane number. The d value for left lane (0) is always 2; the d value for the center lane (1) is always 6, and the d value for the right lane (2) is always 10. This enables the program to make decisions of where the car should be based on lane number.
+
+Although it is possible to check all 3 lanes regardless of what the current lane the car is in, in most countries, it is not allowed to change for 2 lanes or more in one session. In addition, changing for more than 2 lanes would cause acceleration and jerk over the safety limit. Therefore, only neighbouring lanes are checked for possible lane changes, even though this solution ignores the possibility of better solutions by changing 2 lanes one by one. 
+
+The best lane is determined by a combined cost function consists of 3 parts: Inefficiency Cost, Distance Cost and Future Distance Cost. Each part is normalized between 0 and 1 and contributes the same weight to the final cost function.
+
+- Inefficiency Cost: This cost is used to determine the current fastest lane to drive on. It checks the speed of the neartest frontal car on each neighbouring lane, the faster that car is, the less cost that lane is. If there is no car in that lane, the cost is 0. If the car is driving at or more than the speed limit, the cost is also 0. If the car stops, the car is 1. The cost function is linear relative to speed.
+
+- Distance Cost: This cost is used to determine the distance of our car to neighbouring cars. This cost function checks the distances of all the cars on neighbouring lanes, no matter whether that car is in front of us or behind of us. If the nearest car is more than 30 meters away, the cost is 0. This cost changes linearly relative to distance from 0 to 1. However, the distance cost for the current lane is halved because unnessesary lane changes should be discouraged. In addition, if the closest car on a neighbouring lane drives slightly faster than the closest car on our current lane, and the two cars are equally distant to our car, our car might just decide to crash into the car on that neighbouring lane.
+
+- Future Distance Cost: This cost is used to determine the distance of our car to neighbouring cars 2 seconds later. Because in this program most lane changes happen in 2 seconds, it is crucial to predict where the car will be 2 seconds later. The future position of cars (including our car) = current position + 2 * current speed, where constant speed in s-coordinate and no lane changing behaviour is assumed for all other cars. The distance calculation in this cost function works in the same way as Distance Cost, with the cost of current lane divided by 2.
+
+The car will then generate an appropriate trajectory to go to the lane with the lowest cost.
+
+
+
+## Instructions
    
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
