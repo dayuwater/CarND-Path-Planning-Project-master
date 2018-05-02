@@ -4,11 +4,19 @@ Self-Driving Car Engineer Nanodegree Program
 ## Reflection
 
 ### Speed Control
-In order to maintain the speed of the car near the speed limit and decelerate the car when slow traffic is detected, a reference speed variable is introduced throughout the program execution. The 
+In order to maintain the speed of the car near the speed limit and decelerate the car when slow traffic is detected, a reference speed variable is introduced throughout the program execution. The reference speed is used to determine how dense the generated spline points need to be used for the path planning. The denser the planned path (as shown in green curves in the simulator), the slower the car will be. I used the same idea presented in an visual demonstration at about 35 minutes in the walkthrough video.
+
+In order to control the maximum acceleration/deceleration of the car, the reference speed is only changed by a small amount for each time frame. However, this requires the car to generate a path that is far enough to react to the road condition. In this code, the safety distance is set at 30m. This should not be confused with the green spline drawn in the simulator. The program will always generate a spline up to 30m ahead of the car, but only the nearest 50 points in the spline are selected.
+
+Because the simulator is running at 50Hz, 50 points would be generated for the simulator as the communication buffer. However, due to the communication delay between the program and the simulator, the simulator might still use previously generated points when new points are sent to the simulator. Therefore, previously generated points must be stored to maintain synchorization, and new points will feed into the buffer until it has 50 points.
 
 ### Trajectory Generation
 
 I used the trajectory generation algorithm described in the walkthrough video using the `spline.h` file by Tino Kluge, which is also used in the video.
+
+Because splines are used to interpolate sparse points with smooth curves, it resolves the jerk problem presented when the car just follow provided waypoints blindly. In addition, splines are guaranteed to pass through waypoints, which is better than polynomial fit because the later approach could ignore waypoints when fitting polynomials. This improves the safety of the car since passing through every waypoints will keep the car at the center of the lane longer.
+
+Using splines also help with lane changing. When the car changes lanes, the subsequent waypoint is set to be a coordinate with different d-value. Splines would smooth out the transition of d-values, which reduces jerk caused by lane changing.
 
 
 ### Lane Decision and Changing Algorithm
